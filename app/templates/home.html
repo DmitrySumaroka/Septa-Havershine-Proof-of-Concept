@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<style>
+body {
+    background-color: #ecf0f1;
+}
+
+#map { height: 500px; width: 100%;}
+
+.navbar-default {
+    background-color: #394ba3;
+    background-image: none;
+    background-repeat: no-repeat;
+}
+.navbar-default .navbar-brand {
+    color: #ecf0f1;
+}
+.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
+    color: #ffffff;
+}
+.navbar-default .navbar-text {
+    color: #ecf0f1;
+}
+.navbar-default .navbar-nav > li > a {
+    color: #ecf0f1;
+}
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+    color: #ffffff;
+}
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+    color: #ffffff;
+    background-color: #000000;
+}
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+    color: #ffffff;
+    background-color: #000000;
+}
+.navbar-default .navbar-toggle {
+    border-color: #000000;
+}
+.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+    background-color: #000000;
+}
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #ecf0f1;
+}
+.navbar-default .navbar-collapse,
+.navbar-default .navbar-form {
+    border-color: #ecf0f1;
+}
+.navbar-default .navbar-link {
+    color: #ecf0f1;
+}
+.navbar-default .navbar-link:hover {
+    color: #ffffff;
+}
+
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #ecf0f1;
+    }
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+        color: #ffffff;
+    }
+    .navbar-default .navbar-nav .open .dropdown-menu > .active > a, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
+        color: #ffffff;
+        background-color: #000000;
+    }
+}
+        </style>
+    </head>
+    <body>
+        <div class="container" style="background-color: white">
+            <h2>
+                Vehicle locations
+            </h2>
+            <p> <span class="lead"> The SEPTA Tracker 9000 </span> is really cool.
+                But right now it doesn't do a whole lot. How you do it is up to you, but here are the "must haves":
+                <ul>
+                    <li>A marker for each SEPTA vehicle</li>
+                    <li>An InfoWindow (see <a href="https://developers.google.com/maps/documentation/javascript/examples/infowindow-simple">this</a>)
+                        for each vehicle that includes:
+                        <ul>
+                            <li>Position (latitude and longitude)</li>
+                            <li>(if defined) Vehicle ID</li>
+                            <li>(if defined) Direction</li>
+                            <li>(if defined) Destination</li>
+                        </ul>
+                        How you present this information is totally up to you (see the markup for example on how to use InfoWindow's)
+                    </li>
+                </ul>
+                <mark>Bonus Round!</mark> If you're a JavaScript/Django wizard then try adding one or more these features:
+                <ul>
+                    <li>Auto-refresh the map periodically with latest vehicle positions.</li>
+                    <li>Allow the user to enter a position (lat+lng) along with a radius, and then only
+                        show vehicles within that area. How users input the data is your decision.</li>
+                    <li>Allow the user to enter a position (lat+lng), and then report the closest vehicle to it.</li>
+                </ul>
+            </p>
+
+        <div class=septaControls>
+            <div>
+                <button type="search" id="refereshButton">Referesh</button>
+            </div>
+            <div>Auto Refresh <input type="checkbox" id='refresh'></div>
+            <div>Select by transit Id <select id='transitSelect'></select></div>
+            <div>Search by location
+                Latitude:
+                <input type="text" id="lat">
+                Longitude:
+                <input type="text" id="lng">
+                Radius in miles
+                <input type="text" id="radius">
+                <button type="search" id="searchButton">Search</button>
+            </div>
+            <div>Find Closest
+                Latitude:
+                <input type="text" id="closelat">
+                Longitude:
+                <input type="text" id="closelng">
+                <button type="search" id="searchClosestButton">Search</button>
+            </div>
+        </div>
+        <div id="map"></div>
+        </div>
+        <script type="text/javascript">
+        /*
+        Here is some sample google maps code to help you get started!
+         */
+        (function (w, $) {
+
+            var map;
+            var markerList = [];
+            var interval;
+
+            w.initMap = function () {
+                map = new w.google.maps.Map(document.getElementById('map'), {
+                    center: {lat: 39.95, lng: -75.1667},
+                    zoom: 11
+                });
+            };
+            makeRequest();
+
+            function addMarkers(transporationInfoList) {
+                $.each(transporationInfoList['transitIds'], function (i, item) {
+                    $('#transitSelect').append($('<option>', {
+                        value: i,
+                        text : item
+                    }));
+                });
+
+                for (var i = 0; i < transporationInfoList['vehicleList'].length; i++) {
+                    var marker = new w.google.maps.Marker({
+                        position: {
+                            "lat": parseFloat(transporationInfoList['vehicleList'][i]['lat']),
+                            "lng": parseFloat(transporationInfoList['vehicleList'][i]['lng'])
+                        },
+                        map: map,
+                        'visable': true
+                    });
+
+                    infoWindow = new w.google.maps.InfoWindow();
+                    contentString = "Latitude: " + parseFloat(transporationInfoList['vehicleList'][i]['lat']) +
+                                  "<br> Longitude: " + parseFloat(transporationInfoList['vehicleList'][i]['lng']) +
+                                  "<br> Vehicle ID: " + transporationInfoList['vehicleList'][i]['VehicleID'] +
+                                  "<br> Direction: " + transporationInfoList['vehicleList'][i]['Direction'] +
+                                  "<br> Destination: " + transporationInfoList['vehicleList'][i]['destination'];
+
+                    marker.content = contentString;
+                    w.google.maps.event.addListener(marker, 'click', function () {
+                        infoWindow.setContent(this.content);
+                        infoWindow.open(map, this);
+                    });
+
+                    markerList.push(marker);
+                }
+            }
+
+            function makeRequest(params = '') {
+                if (params) {
+                    params = "?" + params;
+                }
+                deleteMarkers()
+                $('#transitSelect').empty()
+                $.ajax({
+                    url: "{{transitUrl}}" + params,
+                    success: function(data) {
+                        data = JSON.parse(data)
+                        if (data['success'] && data['vehicleList'][0]) {
+                            addMarkers(data);
+                        }
+                        else {
+                            alert("Soemthing went wrong, please refresh and try again");
+                        }
+                    }
+                });
+            }
+
+            function deleteMarkers() {
+                for(i = 0; i < markerList.length; i++){
+                    markerList[i].setMap(null);
+                }
+            }
+
+            function setTimesRequest() {
+                timedUpdates = setInterval(function() {
+                    param = "noCached=true"
+                    makeRequest(param);
+                }, 10000);
+
+                return timedUpdates;
+            }
+
+            $("#refresh").change(function() {
+                if ($("#refresh").is(':checked')) {
+                    interval = setTimesRequest();
+                } else {
+                    if (typeof interval != 'undefined') {
+                        window.clearInterval(interval);
+                    }
+                }
+            });
+
+            $("#transitSelect").change(function() {
+                params = $("#transitSelect option:selected").text();
+                if (typeof interval != 'undefined') {
+                    window.clearInterval(interval);
+                    $("#refresh").attr('checked', false);
+                }
+                params = "transitSelect=" + params;
+                makeRequest(params);
+            });
+
+            $('#searchButton').click(function() {
+
+                if ($('#lng').val().trim() !== ""
+                    && $('#lat').val().trim() !== ""
+                    && $('#radius').val().trim() !== "") {
+
+                    params = "search=True&lat=" + $('#lat').val() + "&lng="
+                            + $('#lng').val() + "&radius=" + $('#radius').val();
+
+                    if (typeof interval != 'undefined') {
+                        window.clearInterval(interval);
+                        $("#refresh").attr('checked', false);
+                    }
+                    makeRequest(params);
+                } else {
+                    alert("Please Fill out the lat and long and radius")
+                }
+            });
+
+            $('#searchClosestButton').click(function() {
+
+                if ($('#closelng').val().trim() !== ""
+                    && $('#closelat').val().trim() !== "") {
+
+                    params = "searchClosest=True&lat=" + $('#closelat').val() + "&lng="
+                            + $('#closelng').val();
+
+                    if (typeof interval != 'undefined') {
+                        window.clearInterval(interval);
+                        $("#refresh").attr('checked', false);
+                    }
+
+                    deleteMarkers();
+                    makeRequest(params);
+                } else {
+                    alert("Please Fill out the lat and long")
+                }
+            });
+
+            $('#refereshButton').click(function() {
+                if (typeof interval != 'undefined') {
+                    window.clearInterval(interval);
+                    $("#refresh").attr('checked', false);
+                }
+                makeRequest()
+            });
+
+        })(window, $);
+        </script>
+        <!--ADD YOUR KEY HERE (replace YOUR_KEY below in the url with your api key) -->
+
+        <script async defer
+          src="http://maps.googleapis.com/maps/api/js?key={{apiKey}}&callback=initMap">
+        </script>
+
+    </body>
+</html>
