@@ -26,7 +26,7 @@ def transit():
         today_date = next(iter(transit_view_json))
         vehicle_list = []
         transit_ids = []
-        byTransitId = request.args.get('transitSelect')
+        by_transit_id = request.args.get('transitSelect')
         closest_dist = None
         closest_marker = None
         search = request.args.get('search')
@@ -36,6 +36,14 @@ def transit():
         if search or search_closest:
             lat = request.args.get('lat')
             lng = request.args.get('lng')
+
+            if lat is None or lng is None:
+                responce = {
+                    "success": False,
+                    "responce": "Latitude or Longitude are missing"
+                }
+                return json.dumps(responce)
+
             point_to_search = (float(lat), float(lng))
 
             if search:
@@ -44,8 +52,8 @@ def transit():
         for vehicle_group in transit_view_json[today_date]:
             tran_id = next(iter(vehicle_group))
             transit_ids.append(tran_id)
-            if byTransitId:
-                if byTransitId == tran_id:
+            if by_transit_id:
+                if by_transit_id == tran_id:
                     for vehicle in vehicle_group[tran_id]:
                         vehicle_list.append(vehicle)
             else:
@@ -59,7 +67,7 @@ def transit():
                     elif search_closest:
                         dist = haversine(point_to_search, (float(vehicle_lat), float(vehicle_lng)))
 
-                        if closest_dist == None or dist < closest_dist:
+                        if closest_dist is None or dist < closest_dist:
                             closest_dist = dist
                             closest_marker = vehicle
                     else:
