@@ -196,8 +196,13 @@ body {
                     url: "{{transitUrl}}" + params,
                     success: function(data) {
                         data = JSON.parse(data)
-                        if (data['success'] && data['vehicleList'][0]) {
-                            addMarkers(data);
+                        if (data['success']) {
+                            if (data['vehicleList'][0]) {
+                                addMarkers(data);
+                            } else {
+                                alert("No vehicles available");
+                                makeRequest()
+                            }
                         }
                         else {
                             alert("Soemthing went wrong, please refresh and try again");
