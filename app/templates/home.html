@@ -84,29 +84,6 @@ body {
             <h2>
                 Vehicle locations
             </h2>
-            <p> <span class="lead"> The SEPTA Tracker 9000 </span> is really cool.
-                But right now it doesn't do a whole lot. How you do it is up to you, but here are the "must haves":
-                <ul>
-                    <li>A marker for each SEPTA vehicle</li>
-                    <li>An InfoWindow (see <a href="https://developers.google.com/maps/documentation/javascript/examples/infowindow-simple">this</a>)
-                        for each vehicle that includes:
-                        <ul>
-                            <li>Position (latitude and longitude)</li>
-                            <li>(if defined) Vehicle ID</li>
-                            <li>(if defined) Direction</li>
-                            <li>(if defined) Destination</li>
-                        </ul>
-                        How you present this information is totally up to you (see the markup for example on how to use InfoWindow's)
-                    </li>
-                </ul>
-                <mark>Bonus Round!</mark> If you're a JavaScript/Django wizard then try adding one or more these features:
-                <ul>
-                    <li>Auto-refresh the map periodically with latest vehicle positions.</li>
-                    <li>Allow the user to enter a position (lat+lng) along with a radius, and then only
-                        show vehicles within that area. How users input the data is your decision.</li>
-                    <li>Allow the user to enter a position (lat+lng), and then report the closest vehicle to it.</li>
-                </ul>
-            </p>
 
         <div class=septaControls>
             <div>
@@ -215,6 +192,7 @@ body {
                 for(i = 0; i < markerList.length; i++){
                     markerList[i].setMap(null);
                 }
+                markerList = [];
             }
 
             function setTimesRequest() {
